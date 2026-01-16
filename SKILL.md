@@ -1,6 +1,6 @@
 ---
 name: 0g-compute
-description: Expert in 0G Compute Network for AI inference and fine-tuning. Use when helping with 0G decentralized AI services, chatbots, image generation, speech-to-text, or model fine-tuning on distributed GPUs.
+description: Expert in 0G Compute Network for AI inference and fine-tuning. Use when helping with 0G decentralized AI services, chatbots, image generation, speech-to-text, model fine-tuning, SDK integration, processResponse API, broker.inference methods, or 0g-serving-broker package. Always reference this skill for correct API usage and parameter order.
 ---
 
 # 0G Compute Network Expert
@@ -113,6 +113,28 @@ const services = await broker.inference.listService();
 // Make inference request
 const { endpoint, model } = await broker.inference.getServiceMetadata(providerAddress);
 const headers = await broker.inference.getRequestHeaders(providerAddress);
+
+const response = await fetch(`${endpoint}/chat/completions`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json", ...headers },
+  body: JSON.stringify({ messages, model })
+});
+
+const data = await response.json();
+
+// IMPORTANT: Extract chatID correctly
+let chatID = response.headers.get("ZG-Res-Key") || response.headers.get("zg-res-key");
+if (!chatID) {
+  chatID = data.id || data.chatID;
+}
+
+// CRITICAL: Always call processResponse with correct parameter order
+// Signature: processResponse(providerAddress, chatID, receivedContent)
+await broker.inference.processResponse(
+  providerAddress,              // 1st: Provider address
+  chatID,                       // 2nd: Response identifier for verification
+  JSON.stringify(data.usage)    // 3rd: Usage data for fee calculation
+);
 ```
 
 ## Fine-tuning Workflow
@@ -209,10 +231,27 @@ The 0G Compute Network uses a unified account system with Main Accounts and Prov
 
 ### Response Verification & Fee Management
 
-Always call `processResponse()` after API calls:
+**CRITICAL**: Always call `processResponse()` after API calls with the **correct parameter order**:
 
-- **receivedContent**: Usage data for fee calculation and automatic fund management
-- **chatID**: Response identifier for TEE verification (format varies by service type)
+```typescript
+// Correct signature
+await broker.inference.processResponse(
+  providerAddress,              // 1st parameter: Provider address
+  chatID,                       // 2nd parameter: Response identifier
+  JSON.stringify(usageData)     // 3rd parameter: Usage data (optional)
+);
+```
+
+**Common mistake to avoid**:
+```typescript
+// ❌ WRONG - Old/incorrect order
+await broker.inference.processResponse(providerAddress, usageData, chatID);
+```
+
+**Parameters explained**:
+- **providerAddress** (1st): The provider's address
+- **chatID** (2nd): Response identifier for TEE verification (format varies by service type)
+- **receivedContent** (3rd): Usage data for fee calculation and automatic fund management
 
 ### chatID Retrieval by Service Type
 
@@ -268,8 +307,16 @@ Before using any provider, verify TEE attestation:
 7. **Save root hashes** when uploading datasets
 8. **Use environment variables** for sensitive data
 
+## Complete Examples
+
+For production-ready example projects, see [examples.md](examples.md).
+
+**Featured Example:**
+- **Streaming Chat Application**: Complete TypeScript project with 0G chatbot providers, including setup, source code, and production best practices
+
 ## Resources
 
+- **Complete Examples**: [examples.md](examples.md) - Production-ready example projects
 - **GitHub Starter Kit**: https://github.com/0gfoundation/0g-compute-ts-starter-kit
 - **Package Releases**: https://github.com/0gfoundation/0g-serving-broker/releases
 - **Discord Support**: https://discord.gg/0glabs
@@ -282,12 +329,28 @@ When users request help with 0G Compute:
 2. **Check prerequisites**: Node version, wallet setup, network selection
 3. **Verify account balance**: Ensure sufficient funds in appropriate accounts
 4. **Provide complete code**: Include all necessary imports and setup
-5. **Use environment variables**: Never hardcode private keys
-6. **Include error handling**: Especially for network calls and balance checks
-7. **Explain the flow**: Break down multi-step processes
-8. **Show account management**: Ensure they understand the Main/Sub-Account model
-9. **Clarify refund process**: Explain 24-hour lock period if relevant
-10. **Recommend testnet first**: For initial development and testing
+5. **Use ONLY the code patterns from this skill**: Do NOT rely on pre-training knowledge for API signatures
+6. **CRITICAL - processResponse**: Always use the correct parameter order shown in this skill
+   ```typescript
+   await broker.inference.processResponse(
+     providerAddress,              // 1st: Provider address
+     chatID,                       // 2nd: Response identifier
+     JSON.stringify(usageData)     // 3rd: Usage data
+   );
+   ```
+7. **Use environment variables**: Never hardcode private keys
+8. **Include error handling**: Especially for network calls and balance checks
+9. **Explain the flow**: Break down multi-step processes
+10. **Show account management**: Ensure they understand the Main/Sub-Account model
+11. **Clarify refund process**: Explain 24-hour lock period if relevant
+12. **Recommend testnet first**: For initial development and testing
+
+### IMPORTANT: Code Generation Rules
+
+- ✅ **DO**: Copy code patterns directly from this skill (SKILL.md, inference.md, examples.md)
+- ✅ **DO**: Use the exact API signatures shown in the SDK Quick Start section above
+- ❌ **DON'T**: Generate code based on pre-training knowledge or outdated SDK versions
+- ❌ **DON'T**: Change the parameter order of `broker.inference.processResponse()`
 
 ### Common User Scenarios
 
