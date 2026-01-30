@@ -325,9 +325,9 @@ async function main() {
             try {
               const parsed = JSON.parse(data);
 
-              // Extract chatID from stream if not in headers
-              if (!chatID && (parsed.id || parsed.chatID)) {
-                chatID = parsed.id || parsed.chatID;
+              // Extract chatID from stream if not in headers (use completion.id)
+              if (!chatID && parsed.id) {
+                chatID = parsed.id;
               }
 
               // Accumulate content
@@ -501,9 +501,9 @@ Implements the correct pattern for streaming chatbot responses:
 // First, try to get from response headers
 let chatID = response.headers.get("ZG-Res-Key") || "";
 
-// During stream processing, fallback to stream data
-if (!chatID && (parsed.id || parsed.chatID)) {
-  chatID = parsed.id || parsed.chatID;
+// During stream processing, fallback to stream data (use completion.id)
+if (!chatID && parsed.id) {
+  chatID = parsed.id;
 }
 ```
 

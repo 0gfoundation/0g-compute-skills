@@ -110,7 +110,7 @@ const answer = data.choices[0].message.content;
 // Process response for fee management and verification
 let chatID = response.headers.get("ZG-Res-Key") || response.headers.get("zg-res-key");
 if (!chatID) {
-  chatID = data.id || data.chatID;
+  chatID = data.id;  // Use completion.id from response body
 }
 
 if (chatID && data.usage) {
@@ -169,8 +169,9 @@ for (const line of rawBody.split('\n')) {
     const jsonStr = trimmed.startsWith('data:') ? trimmed.slice(5).trim() : trimmed;
     const message = JSON.parse(jsonStr);
 
-    if (!streamChatID && (message.id || message.chatID)) {
-      streamChatID = message.id || message.chatID;
+    // For chatbot, try to get ID from stream data (use completion.id)
+    if (!streamChatID && message.id) {
+      streamChatID = message.id;
     }
     if (message.usage) {
       usage = message.usage;
@@ -178,7 +179,7 @@ for (const line of rawBody.split('\n')) {
   } catch {}
 }
 
-// Use chatID from stream data if available, otherwise use header
+// Use chatID from header if available, otherwise use chatID from stream data
 const finalChatID = chatID || streamChatID;
 
 if (finalChatID) {
@@ -494,10 +495,12 @@ print(transcription.text)
 
 ### chatID Retrieval
 
-- **Chatbot**: First try `ZG-Res-Key` header, then check `response.id` or `data.chatID` as fallback
+**Principle**: Always prioritize `ZG-Res-Key` from response headers. Only use fallback methods when header is not present.
+
+- **Chatbot**: First try `ZG-Res-Key` header, then check `data.id` (completion ID from response body) as fallback
 - **Text-to-Image & Speech-to-Text**: Always get chatID from `ZG-Res-Key` response header
 - **Streaming responses**:
-  - **Chatbot streaming**: Check headers first, then try to get `id` or `chatID` from stream data
+  - **Chatbot streaming**: Check headers first, then try to get `id` from stream data as fallback
   - **Speech-to-text streaming**: Get chatID from `ZG-Res-Key` header immediately
 
 ### Usage Data

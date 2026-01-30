@@ -125,7 +125,7 @@ const data = await response.json();
 // IMPORTANT: Extract chatID correctly
 let chatID = response.headers.get("ZG-Res-Key") || response.headers.get("zg-res-key");
 if (!chatID) {
-  chatID = data.id || data.chatID;
+  chatID = data.id;  // Use completion.id from response body
 }
 
 // CRITICAL: Always call processResponse with correct parameter order
@@ -255,10 +255,12 @@ await broker.inference.processResponse(providerAddress, usageData, chatID);
 
 ### chatID Retrieval by Service Type
 
-- **Chatbot**: Try `ZG-Res-Key` header → fallback to `response.id` or `data.chatID`
+**Principle**: Always prioritize `ZG-Res-Key` from response headers. Only use fallback methods when header is not present.
+
+- **Chatbot**: Try `ZG-Res-Key` header → fallback to `data.id` (completion ID from response body)
 - **Text-to-Image**: Always use `ZG-Res-Key` response header
 - **Speech-to-Text**: Always use `ZG-Res-Key` response header
-- **Chatbot Streaming**: Check headers first → fallback to `id` or `chatID` in stream data
+- **Chatbot Streaming**: Check headers first → fallback to `id` from stream data
 - **Audio Streaming**: Always use `ZG-Res-Key` header
 
 ### Provider Verification
