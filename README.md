@@ -1,5 +1,7 @@
 # 0G Compute Skills for Claude Code
 
+> **Note**: This repository has been superseded. Please use [0g-agent-skills](https://github.com/0gfoundation/0g-agent-skills.git) as the unified entry point for all 0G skills.
+
 A comprehensive Claude Code skill for working with 0G Compute Network - decentralized AI inference platform.
 
 ## What This Skill Does
