@@ -114,7 +114,7 @@ RPC_URL=https://evmrpc.0g.ai
 PRIVATE_KEY=your_private_key_here
 
 # Default provider address for text-to-image
-PROVIDER_ADDRESS=0xE29a7226f62c07b0887da621a788969b90bde371
+PROVIDER_ADDRESS=0xE29a72c7629815Eb480aE5b1F2dfA06f06cdF974
 
 # Output directory
 OUTPUT_DIR=./outputs
@@ -298,19 +298,11 @@ async function main() {
                      response.headers.get("zg-res-key");
 
       // Process response for fee management
-      if (chatID) {
-        await broker.inference.processResponse(
-          providerAddress,
-          chatID,
-          undefined  // Text-to-image doesn't use usage data
-        );
-      } else {
-        await broker.inference.processResponse(
-          providerAddress,
-          undefined,
-          undefined
-        );
-      }
+      await broker.inference.processResponse(
+        providerAddress,
+        JSON.stringify(data),  // Received content
+        chatID                 // Optional chatID for TEE verification
+      );
 
       // Download image
       if (data.data && data.data[0]) {
@@ -395,7 +387,7 @@ npm start -- --provider 0xE29a... --prompt "Futuristic cityscape"
 📍 Wallet: 0x1234...5678
 ✅ Broker initialized
 📡 Endpoint: https://provider-endpoint.example.com/v1/proxy
-🤖 Model: flux-turbo
+🤖 Model: z-image
 💰 Sub-Account Balance: 3.456789 0G
 
 🎨 Generating 1 image(s)...
@@ -434,8 +426,8 @@ const chatID = response.headers.get("ZG-Res-Key") ||
 // Process response
 await broker.inference.processResponse(
   providerAddress,
-  chatID,        // From headers
-  undefined      // No usage data for text-to-image
+  JSON.stringify(data),  // Received content
+  chatID                 // Optional chatID for TEE verification
 );
 ```
 
@@ -474,7 +466,7 @@ for (let i = 0; i < numImages; i++) {
 
 | Provider | Address | Model | Notes |
 |----------|---------|-------|-------|
-| Flux Turbo | `0xE29a7226f62c07b0887da621a788969b90bde371` | flux-turbo | Fast, high quality |
+| z-image | `0xE29a72c7629815Eb480aE5b1F2dfA06f06cdF974` | z-image | Text-to-image generation |
 
 To find more providers:
 

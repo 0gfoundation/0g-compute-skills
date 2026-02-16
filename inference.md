@@ -143,19 +143,11 @@ if (!chatID) {
   chatID = data.id;  // Use completion.id from response body
 }
 
-if (chatID && data.usage) {
-  await broker.inference.processResponse(
-    providerAddress,
-    chatID,
-    JSON.stringify(data.usage)
-  );
-} else if (data.usage) {
-  await broker.inference.processResponse(
-    providerAddress,
-    undefined,
-    JSON.stringify(data.usage)
-  );
-}
+await broker.inference.processResponse(
+  providerAddress,
+  JSON.stringify(data),  // Received content
+  chatID                 // Optional chatID for TEE verification
+);
 ```
 
 ### Streaming Chat Completion
@@ -212,19 +204,11 @@ for (const line of rawBody.split('\n')) {
 // Use chatID from header if available, otherwise use chatID from stream data
 const finalChatID = chatID || streamChatID;
 
-if (finalChatID) {
-  await broker.inference.processResponse(
-    providerAddress,
-    finalChatID,
-    JSON.stringify(usage || {})
-  );
-} else if (usage) {
-  await broker.inference.processResponse(
-    providerAddress,
-    undefined,
-    JSON.stringify(usage)
-  );
-}
+await broker.inference.processResponse(
+  providerAddress,
+  JSON.stringify(usage || {}),  // Received content
+  finalChatID                   // Optional chatID for TEE verification
+);
 ```
 
 ## Text-to-Image Generation
@@ -261,19 +245,12 @@ const imageUrl = data.data[0].url;
 // Get chatID from response headers only
 const chatID = response.headers.get("ZG-Res-Key") || response.headers.get("zg-res-key");
 
-if (chatID) {
-  const isValid = await broker.inference.processResponse(
-    providerAddress,
-    chatID
-  );
-  console.log("Response valid:", isValid);
-} else {
-  // Fallback: process without verification if no chatID
-  await broker.inference.processResponse(
-    providerAddress,
-    undefined
-  );
-}
+const isValid = await broker.inference.processResponse(
+  providerAddress,
+  JSON.stringify(data),  // Received content
+  chatID                 // Optional chatID for TEE verification
+);
+console.log("Response valid:", isValid);
 ```
 
 ## Speech-to-Text Transcription
@@ -305,20 +282,12 @@ const transcription = data.text;
 // Get chatID from response headers
 const chatID = response.headers.get("ZG-Res-Key") || response.headers.get("zg-res-key");
 
-if (chatID && data.usage) {
-  const isValid = await broker.inference.processResponse(
-    providerAddress,
-    chatID,
-    JSON.stringify(data.usage)
-  );
-  console.log("Response valid:", isValid);
-} else if (data.usage) {
-  await broker.inference.processResponse(
-    providerAddress,
-    undefined,
-    JSON.stringify(data.usage)
-  );
-}
+const isValid = await broker.inference.processResponse(
+  providerAddress,
+  JSON.stringify(data),  // Received content
+  chatID                 // Optional chatID for TEE verification
+);
+console.log("Response valid:", isValid);
 ```
 
 ### Streaming Transcription
@@ -360,20 +329,12 @@ for (const line of rawBody.split('\n')) {
 }
 
 // Process with chatID for verification if available
-if (chatID) {
-  const isValid = await broker.inference.processResponse(
-    providerAddress,
-    chatID,
-    JSON.stringify(usage || {})
-  );
-  console.log("Audio streaming response valid:", isValid);
-} else if (usage) {
-  await broker.inference.processResponse(
-    providerAddress,
-    undefined,
-    JSON.stringify(usage)
-  );
-}
+const isValid = await broker.inference.processResponse(
+  providerAddress,
+  JSON.stringify(usage || {}),  // Received content
+  chatID                        // Optional chatID for TEE verification
+);
+console.log("Audio streaming response valid:", isValid);
 ```
 
 ## Direct API Usage (cURL)
