@@ -3,6 +3,8 @@ name: 0g-compute
 description: Expert in 0G Compute Network for AI inference and fine-tuning. Use when helping with 0G decentralized AI services, chatbots, image generation, speech-to-text, model fine-tuning, SDK integration, processResponse API, broker.inference methods, or 0g-serving-broker package. Always reference this skill for correct API usage and parameter order.
 ---
 
+> **⚠️ Deprecation Notice:** This skill has been superseded by [0g-agent-skills](https://github.com/0gfoundation/0g-agent-skills), which provides a unified entry point for all 0G services (Compute, Storage, Chain, Cross-Layer). Consider migrating to the newer skill for the most up-to-date patterns.
+
 # 0G Compute Network Expert
 
 You are an expert in the 0G Compute Network, specializing in AI inference and model fine-tuning on decentralized infrastructure.
@@ -13,8 +15,8 @@ You are an expert in the 0G Compute Network, specializing in AI inference and mo
 
 Help users implement and use 0G Compute's decentralized AI inference services including:
 
-- **Chatbot Services**: Conversational AI with models like DeepSeek V3.1, GPT-OSS, Qwen, Gemma
-- **Text-to-Image**: Image generation using Flux Turbo
+- **Chatbot Services**: Conversational AI with models like DeepSeek, GPT-OSS, Qwen, GLM-5, Gemma
+- **Text-to-Image**: Image generation (registered as `z-image` on-chain)
 - **Speech-to-Text**: Audio transcription using Whisper Large V3
 
 ### 2. Fine-tuning Services
@@ -26,15 +28,27 @@ Guide users through fine-tuning AI models on 0G's distributed GPU network (testn
 ### Testnet
 
 - RPC URL: `https://evmrpc-testnet.0g.ai`
-- Available Models: 3 chatbot models including qwen-2.5-7b-instruct, gpt-oss-20b, gemma-3-27b-it
+- Available Models (as of Feb 2026):
+  - `qwen/qwen-2.5-7b-instruct` (chatbot)
+  - `openai/gpt-oss-20b` (chatbot)
+  - `google/gemma-3-27b-it` (chatbot)
+  - `qwen/qwen-image-edit-2511` (image-editing)
 - Supports: Inference and Fine-tuning
 
 ### Mainnet
 
 - RPC URL: `https://evmrpc.0g.ai`
-- Available Models: 7 models (5 chatbots, 1 speech-to-text, 1 text-to-image)
-- Notable Models: DeepSeek-V3.1, GPT-OSS-120B, Qwen2.5-VL-72B, Whisper-large-v3, flux-turbo
-- Supports: Inference only (fine-tuning coming soon)
+- Available Models (as of Feb 2026, verified via on-chain contract query):
+  - `zai-org/GLM-5-FP8` (chatbot)
+  - `openai/gpt-oss-120b` (chatbot)
+  - `deepseek/deepseek-chat-v3-0324` (chatbot)
+  - `qwen/qwen3-vl-30b-a3b-instruct` (chatbot)
+  - `openai/gpt-oss-20b` (chatbot)
+  - `openai/whisper-large-v3` (speech-to-text)
+  - `z-image` (text-to-image)
+- Supports: Inference only (fine-tuning testnet only)
+
+> **Note:** Model availability changes as providers register/deregister services. Use `broker.inference.listService()` or `0g-compute-cli inference list-providers` for real-time availability. On-chain model names use `org/model-name` format.
 
 ## Prerequisites
 
@@ -110,14 +124,9 @@ const broker = await createZGComputeNetworkBroker(wallet);
 // List services
 const services = await broker.inference.listService();
 
-// List services with detailed health metrics (uptime, latency)
-const servicesWithDetail = await broker.inference.listServiceWithDetail();
-servicesWithDetail.forEach(service => {
-  console.log(`Provider: ${service.provider}`);
-  if (service.healthMetrics) {
-    console.log(`  Uptime: ${service.healthMetrics.uptime}%`);
-    console.log(`  Latency: ${service.healthMetrics.avgResponseTime}ms`);
-  }
+// Each service contains: provider, serviceType, url, inputPrice, outputPrice, model, verifiability
+services.forEach(service => {
+  console.log(`Provider: ${service.provider}, Model: ${service.model}, Type: ${service.serviceType}`);
 });
 
 // Make inference request
@@ -138,12 +147,12 @@ if (!chatID) {
   chatID = data.id;  // Use completion.id from response body
 }
 
-// CRITICAL: Always call processResponse with correct parameter order
-// Signature: processResponse(providerAddress, chatID, receivedContent)
-await broker.inference.processResponse(
+// IMPORTANT: Always call processResponse after receiving a response
+// See "Response Verification & Fee Management" section for parameter details
+const isValid = await broker.inference.processResponse(
   providerAddress,              // 1st: Provider address
-  chatID,                       // 2nd: Response identifier for verification
-  JSON.stringify(data.usage)    // 3rd: Usage data for fee calculation
+  JSON.stringify(data),         // 2nd: Received content
+  chatID                        // 3rd: Optional chatID for TEE verification
 );
 ```
 
@@ -241,27 +250,23 @@ The 0G Compute Network uses a unified account system with Main Accounts and Prov
 
 ### Response Verification & Fee Management
 
-**CRITICAL**: Always call `processResponse()` after API calls with the **correct parameter order**:
+**CRITICAL**: Always call `processResponse()` after API calls for fee management and verification.
+
+> **⚠️ Known inconsistency:** The official SDK docs (sdk.md) and the serving-user-broker example document different parameter orders for `processResponse()`. Until this is resolved upstream, refer to the official sdk.md signature:
 
 ```typescript
-// Correct signature
-await broker.inference.processResponse(
-  providerAddress,              // 1st parameter: Provider address
-  chatID,                       // 2nd parameter: Response identifier
-  JSON.stringify(usageData)     // 3rd parameter: Usage data (optional)
+// Signature per official sdk.md
+const isValid = await broker.inference.processResponse(
+  providerAddress,     // 1st: Provider address
+  receivedContent,     // 2nd: The response content received
+  chatID               // 3rd: Optional — chatID for verifiable (TEE) services
 );
 ```
 
-**Common mistake to avoid**:
-```typescript
-// ❌ WRONG - Old/incorrect order
-await broker.inference.processResponse(providerAddress, usageData, chatID);
-```
-
 **Parameters explained**:
-- **providerAddress** (1st): The provider's address
-- **chatID** (2nd): Response identifier for TEE verification (format varies by service type)
-- **receivedContent** (3rd): Usage data for fee calculation and automatic fund management
+- **providerAddress** (1st): The provider's wallet address
+- **receivedContent** (2nd): The response content for verification
+- **chatID** (3rd, optional): Response identifier for TEE verification — only needed for verifiable services
 
 ### chatID Retrieval by Service Type
 
@@ -342,14 +347,7 @@ When users request help with 0G Compute:
 3. **Verify account balance**: Ensure sufficient funds in appropriate accounts
 4. **Provide complete code**: Include all necessary imports and setup
 5. **Use ONLY the code patterns from this skill**: Do NOT rely on pre-training knowledge for API signatures
-6. **CRITICAL - processResponse**: Always use the correct parameter order shown in this skill
-   ```typescript
-   await broker.inference.processResponse(
-     providerAddress,              // 1st: Provider address
-     chatID,                       // 2nd: Response identifier
-     JSON.stringify(usageData)     // 3rd: Usage data
-   );
-   ```
+6. **CRITICAL - processResponse**: Always call processResponse after API calls (see "Response Verification" section for current parameter order)
 7. **Use environment variables**: Never hardcode private keys
 8. **Include error handling**: Especially for network calls and balance checks
 9. **Explain the flow**: Break down multi-step processes
@@ -369,6 +367,6 @@ When users request help with 0G Compute:
 - **Account Questions**: Reference [account-management.md](account-management.md) for detailed fund flow
 - **Inference Questions**: Reference [inference.md](inference.md) for service-specific patterns
 - **Fine-tuning Questions**: Reference [fine-tuning.md](fine-tuning.md) for complete workflow
-- **Provider Selection**: Use `listServiceWithDetail()` to help users choose providers based on uptime and response time metrics
+- **Provider Selection**: Use `listService()` to discover available providers and their models
 
 Always generate production-ready, secure code with proper error handling and best practices.
