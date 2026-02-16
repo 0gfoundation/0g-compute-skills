@@ -65,21 +65,12 @@ export default {
 // List all available services
 const services = await broker.inference.listService();
 
-// List services with detailed health metrics
-// Returns ServiceWithDetail[] with real-time uptime and latency information
-const servicesWithDetail = await broker.inference.listServiceWithDetail();
-servicesWithDetail.forEach(service => {
+// Each service contains: provider, serviceType, url, inputPrice, outputPrice, updatedAt, model, verifiability
+services.forEach(service => {
   console.log(`Provider: ${service.provider}`);
   console.log(`Service Type: ${service.serviceType}`);
   console.log(`Model: ${service.model}`);
-
-  // Health metrics from monitoring API (optional field)
-  if (service.healthMetrics) {
-    console.log(`  Status: ${service.healthMetrics.status}`);           // 'healthy' | 'warning' | 'critical' | 'unknown'
-    console.log(`  Uptime: ${service.healthMetrics.uptime}%`);          // Success rate percentage (0-100)
-    console.log(`  Avg Response Time: ${service.healthMetrics.avgResponseTime}ms`); // Average latency in milliseconds
-    console.log(`  Last Check: ${service.healthMetrics.lastCheck}`);    // ISO timestamp of last health check
-  }
+  console.log(`Verifiability: ${service.verifiability}`); // 'TeeML' or empty
 });
 
 // Filter by service type
@@ -92,42 +83,22 @@ const servicesPage2 = await broker.inference.listService(50, 50); // offset=50, 
 const withUnacknowledged = await broker.inference.listService(0, 50, true); // include unacknowledged providers
 ```
 
-### Provider Selection Based on Health Metrics
+### Provider Selection
 
-Use `listServiceWithDetail()` to make informed provider selection decisions:
+Filter services by type and choose based on pricing:
 
 ```typescript
-// Get services with health metrics
-const servicesWithDetail = await broker.inference.listServiceWithDetail();
+// Filter by service type
+const chatbotServices = services.filter(s => s.serviceType === 'chatbot');
+const imageServices = services.filter(s => s.serviceType === 'text-to-image');
 
-// Filter for healthy providers with good performance
-const healthyProviders = servicesWithDetail.filter(service => {
-  return service.healthMetrics &&
-         service.healthMetrics.status === 'healthy' &&
-         service.healthMetrics.uptime >= 95 &&  // At least 95% uptime
-         service.healthMetrics.avgResponseTime < 1000;  // Less than 1 second latency
-});
+// Sort by input price (cheapest first)
+const sortedByPrice = [...chatbotServices].sort((a, b) =>
+  Number(a.inputPrice) - Number(b.inputPrice)
+);
 
-// Sort by uptime (descending)
-const sortedByUptime = [...servicesWithDetail]
-  .filter(s => s.healthMetrics)
-  .sort((a, b) => b.healthMetrics!.uptime - a.healthMetrics!.uptime);
-
-// Sort by response time (ascending - fastest first)
-const sortedByLatency = [...servicesWithDetail]
-  .filter(s => s.healthMetrics)
-  .sort((a, b) => a.healthMetrics!.avgResponseTime - b.healthMetrics!.avgResponseTime);
-
-// Get the most reliable provider for a specific service type
-const bestChatbotProvider = servicesWithDetail
-  .filter(s => s.serviceType === 'chatbot' && s.healthMetrics)
-  .sort((a, b) => {
-    // Prioritize uptime, then latency
-    if (a.healthMetrics!.uptime !== b.healthMetrics!.uptime) {
-      return b.healthMetrics!.uptime - a.healthMetrics!.uptime;
-    }
-    return a.healthMetrics!.avgResponseTime - b.healthMetrics!.avgResponseTime;
-  })[0];
+const bestProvider = sortedByPrice[0];
+console.log(`Best chatbot: ${bestProvider.model} at ${bestProvider.provider}`);
 ```
 
 ## Account Management
@@ -172,19 +143,11 @@ if (!chatID) {
   chatID = data.id;  // Use completion.id from response body
 }
 
-if (chatID && data.usage) {
-  await broker.inference.processResponse(
-    providerAddress,
-    chatID,
-    JSON.stringify(data.usage)
-  );
-} else if (data.usage) {
-  await broker.inference.processResponse(
-    providerAddress,
-    undefined,
-    JSON.stringify(data.usage)
-  );
-}
+await broker.inference.processResponse(
+  providerAddress,
+  JSON.stringify(data),  // Received content
+  chatID                 // Optional chatID for TEE verification
+);
 ```
 
 ### Streaming Chat Completion
@@ -241,19 +204,11 @@ for (const line of rawBody.split('\n')) {
 // Use chatID from header if available, otherwise use chatID from stream data
 const finalChatID = chatID || streamChatID;
 
-if (finalChatID) {
-  await broker.inference.processResponse(
-    providerAddress,
-    finalChatID,
-    JSON.stringify(usage || {})
-  );
-} else if (usage) {
-  await broker.inference.processResponse(
-    providerAddress,
-    undefined,
-    JSON.stringify(usage)
-  );
-}
+await broker.inference.processResponse(
+  providerAddress,
+  JSON.stringify(usage || {}),  // Received content
+  finalChatID                   // Optional chatID for TEE verification
+);
 ```
 
 ## Text-to-Image Generation
@@ -290,19 +245,12 @@ const imageUrl = data.data[0].url;
 // Get chatID from response headers only
 const chatID = response.headers.get("ZG-Res-Key") || response.headers.get("zg-res-key");
 
-if (chatID) {
-  const isValid = await broker.inference.processResponse(
-    providerAddress,
-    chatID
-  );
-  console.log("Response valid:", isValid);
-} else {
-  // Fallback: process without verification if no chatID
-  await broker.inference.processResponse(
-    providerAddress,
-    undefined
-  );
-}
+const isValid = await broker.inference.processResponse(
+  providerAddress,
+  JSON.stringify(data),  // Received content
+  chatID                 // Optional chatID for TEE verification
+);
+console.log("Response valid:", isValid);
 ```
 
 ## Speech-to-Text Transcription
@@ -334,20 +282,12 @@ const transcription = data.text;
 // Get chatID from response headers
 const chatID = response.headers.get("ZG-Res-Key") || response.headers.get("zg-res-key");
 
-if (chatID && data.usage) {
-  const isValid = await broker.inference.processResponse(
-    providerAddress,
-    chatID,
-    JSON.stringify(data.usage)
-  );
-  console.log("Response valid:", isValid);
-} else if (data.usage) {
-  await broker.inference.processResponse(
-    providerAddress,
-    undefined,
-    JSON.stringify(data.usage)
-  );
-}
+const isValid = await broker.inference.processResponse(
+  providerAddress,
+  JSON.stringify(data),  // Received content
+  chatID                 // Optional chatID for TEE verification
+);
+console.log("Response valid:", isValid);
 ```
 
 ### Streaming Transcription
@@ -389,20 +329,12 @@ for (const line of rawBody.split('\n')) {
 }
 
 // Process with chatID for verification if available
-if (chatID) {
-  const isValid = await broker.inference.processResponse(
-    providerAddress,
-    chatID,
-    JSON.stringify(usage || {})
-  );
-  console.log("Audio streaming response valid:", isValid);
-} else if (usage) {
-  await broker.inference.processResponse(
-    providerAddress,
-    undefined,
-    JSON.stringify(usage)
-  );
-}
+const isValid = await broker.inference.processResponse(
+  providerAddress,
+  JSON.stringify(usage || {}),  // Received content
+  chatID                        // Optional chatID for TEE verification
+);
+console.log("Audio streaming response valid:", isValid);
 ```
 
 ## Direct API Usage (cURL)

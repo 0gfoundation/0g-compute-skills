@@ -117,7 +117,7 @@ RPC_URL=https://evmrpc.0g.ai
 PRIVATE_KEY=your_private_key_here
 
 # Default provider address for speech-to-text
-PROVIDER_ADDRESS=0x36aCff47e93D45131471edeBA45E682B0EDDD0cD
+PROVIDER_ADDRESS=0x36aCffCEa3CCe07cAdd1740Ad992dB16Ab324517
 
 # Directories
 AUDIO_DIR=./audio
@@ -256,19 +256,11 @@ async function transcribeAudio(
                  response.headers.get("zg-res-key");
 
   // Process response for fee management
-  if (chatID && data.usage) {
-    await broker.inference.processResponse(
-      providerAddress,
-      chatID,
-      JSON.stringify(data.usage)
-    );
-  } else if (data.usage) {
-    await broker.inference.processResponse(
-      providerAddress,
-      undefined,
-      JSON.stringify(data.usage)
-    );
-  }
+  await broker.inference.processResponse(
+    providerAddress,
+    JSON.stringify(data),  // Received content
+    chatID                 // Optional chatID for TEE verification
+  );
 
   return data;
 }
@@ -550,13 +542,11 @@ const chatID = response.headers.get("ZG-Res-Key") ||
                response.headers.get("zg-res-key");
 
 // Process response
-if (chatID && data.usage) {
-  await broker.inference.processResponse(
-    providerAddress,
-    chatID,                      // From headers
-    JSON.stringify(data.usage)   // Usage data included
-  );
-}
+await broker.inference.processResponse(
+  providerAddress,
+  JSON.stringify(data),          // Received content
+  chatID                         // Optional chatID for TEE verification
+);
 ```
 
 ### 3. Output Format Conversion
@@ -589,7 +579,7 @@ function formatTimestamp(seconds: number): string {
 
 | Provider | Address | Model | Notes |
 |----------|---------|-------|-------|
-| Whisper Large V3 | `0x36aCff47e93D45131471edeBA45E682B0EDDD0cD` | openai/whisper-large-v3 | High accuracy |
+| Whisper Large V3 | `0x36aCffCEa3CCe07cAdd1740Ad992dB16Ab324517` | openai/whisper-large-v3 | High accuracy |
 
 To find more providers:
 
