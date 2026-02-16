@@ -65,10 +65,69 @@ export default {
 // List all available services
 const services = await broker.inference.listService();
 
+// List services with detailed health metrics
+// Returns ServiceWithDetail[] with real-time uptime and latency information
+const servicesWithDetail = await broker.inference.listServiceWithDetail();
+servicesWithDetail.forEach(service => {
+  console.log(`Provider: ${service.provider}`);
+  console.log(`Service Type: ${service.serviceType}`);
+  console.log(`Model: ${service.model}`);
+
+  // Health metrics from monitoring API (optional field)
+  if (service.healthMetrics) {
+    console.log(`  Status: ${service.healthMetrics.status}`);           // 'healthy' | 'warning' | 'critical' | 'unknown'
+    console.log(`  Uptime: ${service.healthMetrics.uptime}%`);          // Success rate percentage (0-100)
+    console.log(`  Avg Response Time: ${service.healthMetrics.avgResponseTime}ms`); // Average latency in milliseconds
+    console.log(`  Last Check: ${service.healthMetrics.lastCheck}`);    // ISO timestamp of last health check
+  }
+});
+
 // Filter by service type
 const chatbotServices = services.filter(s => s.serviceType === 'chatbot');
 const imageServices = services.filter(s => s.serviceType === 'text-to-image');
 const speechServices = services.filter(s => s.serviceType === 'speech-to-text');
+
+// Pagination and filtering options
+const servicesPage2 = await broker.inference.listService(50, 50); // offset=50, limit=50
+const withUnacknowledged = await broker.inference.listService(0, 50, true); // include unacknowledged providers
+```
+
+### Provider Selection Based on Health Metrics
+
+Use `listServiceWithDetail()` to make informed provider selection decisions:
+
+```typescript
+// Get services with health metrics
+const servicesWithDetail = await broker.inference.listServiceWithDetail();
+
+// Filter for healthy providers with good performance
+const healthyProviders = servicesWithDetail.filter(service => {
+  return service.healthMetrics &&
+         service.healthMetrics.status === 'healthy' &&
+         service.healthMetrics.uptime >= 95 &&  // At least 95% uptime
+         service.healthMetrics.avgResponseTime < 1000;  // Less than 1 second latency
+});
+
+// Sort by uptime (descending)
+const sortedByUptime = [...servicesWithDetail]
+  .filter(s => s.healthMetrics)
+  .sort((a, b) => b.healthMetrics!.uptime - a.healthMetrics!.uptime);
+
+// Sort by response time (ascending - fastest first)
+const sortedByLatency = [...servicesWithDetail]
+  .filter(s => s.healthMetrics)
+  .sort((a, b) => a.healthMetrics!.avgResponseTime - b.healthMetrics!.avgResponseTime);
+
+// Get the most reliable provider for a specific service type
+const bestChatbotProvider = servicesWithDetail
+  .filter(s => s.serviceType === 'chatbot' && s.healthMetrics)
+  .sort((a, b) => {
+    // Prioritize uptime, then latency
+    if (a.healthMetrics!.uptime !== b.healthMetrics!.uptime) {
+      return b.healthMetrics!.uptime - a.healthMetrics!.uptime;
+    }
+    return a.healthMetrics!.avgResponseTime - b.healthMetrics!.avgResponseTime;
+  })[0];
 ```
 
 ## Account Management

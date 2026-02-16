@@ -110,6 +110,16 @@ const broker = await createZGComputeNetworkBroker(wallet);
 // List services
 const services = await broker.inference.listService();
 
+// List services with detailed health metrics (uptime, latency)
+const servicesWithDetail = await broker.inference.listServiceWithDetail();
+servicesWithDetail.forEach(service => {
+  console.log(`Provider: ${service.provider}`);
+  if (service.healthMetrics) {
+    console.log(`  Uptime: ${service.healthMetrics.uptime}%`);
+    console.log(`  Latency: ${service.healthMetrics.avgResponseTime}ms`);
+  }
+});
+
 // Make inference request
 const { endpoint, model } = await broker.inference.getServiceMetadata(providerAddress);
 const headers = await broker.inference.getRequestHeaders(providerAddress);
@@ -359,5 +369,6 @@ When users request help with 0G Compute:
 - **Account Questions**: Reference [account-management.md](account-management.md) for detailed fund flow
 - **Inference Questions**: Reference [inference.md](inference.md) for service-specific patterns
 - **Fine-tuning Questions**: Reference [fine-tuning.md](fine-tuning.md) for complete workflow
+- **Provider Selection**: Use `listServiceWithDetail()` to help users choose providers based on uptime and response time metrics
 
 Always generate production-ready, secure code with proper error handling and best practices.
