@@ -1,97 +1,61 @@
-# 0G Compute Skills for Claude Code
+# 0G Compute Skills
 
-> **Note**: This repository has been superseded. Please use [0g-agent-skills](https://github.com/0gfoundation/0g-agent-skills.git) as the unified entry point for all 0G skills.
+> **Note**: This repository has been superseded by [0g-agent-skills](https://github.com/0gfoundation/0g-agent-skills) as the unified entry point for all 0G skills.
 
-A comprehensive Claude Code skill for working with 0G Compute Network - decentralized AI inference platform.
+An [Agent Skills](https://agentskills.io) compatible skill for working with 0G Compute Network — a decentralized GPU marketplace for AI inference and model fine-tuning.
 
-## What This Skill Does
+## Supported Platforms
 
-This skill makes Claude an expert in 0G Compute Network, helping you:
+This skill follows the [Agent Skills open standard](https://agentskills.io) and works with:
 
-- 🤖 **Build AI inference applications** - Chatbots, image generation, speech-to-text
-- 🔧 **Integrate 0G SDK** - Correct API usage with up-to-date patterns
-- 💰 **Manage accounts** - Deposits, transfers, refunds with sub-account system
+- **Claude Code** — `~/.claude/skills/0g-compute/`
+- **OpenAI Codex** — `~/.agents/skills/0g-compute/`
+- **OpenClaw** — `~/.openclaw/skills/0g-compute/`
+- **Cursor, Gemini CLI, VS Code, Roo Code** — standard SKILL.md discovery
 
 ## Installation
 
-### Personal Installation (Recommended)
-
-For use across all your projects:
-
 ```bash
-# Clone or copy this directory to your personal skills folder
-cp -r /path/to/0g-compute-skills ~/.claude/skills/
+# Claude Code
+git clone https://github.com/0gfoundation/0g-compute-skills ~/.claude/skills/0g-compute
 
-# Or use git clone
-cd ~/.claude/skills
-git clone <repository-url> 0g-compute-skills
+# OpenAI Codex
+git clone https://github.com/0gfoundation/0g-compute-skills ~/.agents/skills/0g-compute
+
+# OpenClaw
+git clone https://github.com/0gfoundation/0g-compute-skills ~/.openclaw/skills/0g-compute
 ```
 
-### Project Installation
+For project-scoped installation, clone into your project's `.claude/skills/` (or equivalent) directory instead.
 
-For sharing with your team:
-
-```bash
-# Copy to project skills folder
-cp -r /path/to/0g-compute-skills .claude/skills/
-```
-
-### Verification
-
-Check if the skill is loaded:
-
-1. Open Claude Code
-2. Ask: "What skills are available?"
-3. You should see `0g-compute` in the list
-
-## How to Use
-
-### Automatic Activation
-
-The skill activates automatically when you mention relevant keywords:
+## Structure
 
 ```
-"Help me integrate 0G Compute SDK"
-"How do I use broker.inference.processResponse?"
-"Create a streaming chatbot with 0G"
+0g-compute-skills/
+├── SKILL.md                          # Core skill (always loaded by LLM)
+├── references/
+│   ├── inference.md                  # SDK patterns for all service types
+│   ├── fine-tuning.md                # Complete fine-tuning workflow
+│   ├── account-management.md         # Fund management guide
+│   └── examples/
+│       ├── README.md                 # Examples index
+│       ├── streaming-chat.md         # Complete streaming chat project
+│       ├── text-to-image.md          # Complete image generation project
+│       └── speech-to-text.md         # Complete transcription project
+└── README.md                         # This file (GitHub-facing)
 ```
 
-### Manual Activation
+**Progressive disclosure**: `SKILL.md` (~2,500 tokens) is always loaded. Reference files (~2,200-3,100 tokens each) are loaded on demand when the user's question requires detailed guidance.
 
-Invoke the skill explicitly:
+## Verification
 
-```
-/0g-compute
-```
-
-### Example Questions
-
-**For SDK Integration**:
-```
-"Show me how to initialize the 0G broker"
-"What's the correct parameter order for processResponse?"
-"Generate a complete chatbot example"
-```
-
-**For Specific Services**:
-```
-"How do I generate images with 0G Compute?"
-"Create a speech-to-text transcription app"
-"Show me streaming chat implementation"
-```
-
-**For Account Management**:
-```
-"How do I deposit funds to my 0G account?"
-"Explain the sub-account system"
-"How do I transfer funds to a provider?"
-```
+1. Open your AI coding agent
+2. Ask: "What skills are available?" or type `/0g-compute`
+3. You should see `0g-compute` in the available skills
 
 ## Resources
 
-### External Links
-
-- **0G Compute Documentation**: https://docs.0g.ai
-- **SDK GitHub**: https://github.com/0gfoundation/0g-serving-broker
-- **Starter Kit**: https://github.com/0gfoundation/0g-compute-ts-starter-kit
-- **Discord Community**: https://discord.gg/0glabs
+- [0G Compute Documentation](https://docs.0g.ai)
+- [SDK GitHub](https://github.com/0gfoundation/0g-serving-broker)
+- [Starter Kit](https://github.com/0gfoundation/0g-compute-ts-starter-kit)
+- [Discord Community](https://discord.gg/0glabs)
