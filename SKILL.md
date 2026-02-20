@@ -84,9 +84,9 @@ if (!chatID) chatID = data.id;
 
 // CRITICAL: Always call processResponse
 await broker.inference.processResponse(
-  providerAddress,          // 1st: provider address
-  JSON.stringify(data),     // 2nd: response content
-  chatID                    // 3rd: optional chatID for TEE verification
+  providerAddress,              // 1st: provider address
+  chatID,                       // 2nd: response identifier for verification
+  JSON.stringify(data.usage)    // 3rd: usage data for fee calculation
 );
 ```
 
@@ -98,15 +98,13 @@ Call `broker.inference.processResponse()` after EVERY API response for fee settl
 
 ```typescript
 await broker.inference.processResponse(
-  providerAddress,          // 1st: provider wallet address
-  JSON.stringify(response), // 2nd: response content received
-  chatID                    // 3rd: optional, for TEE-verifiable services
+  providerAddress,              // 1st: provider address
+  chatID,                       // 2nd: response identifier for verification
+  JSON.stringify(data.usage)    // 3rd: usage data for fee calculation
 );
 ```
 
-Parameter order: **provider, content, chatID**. Do NOT reorder.
-
-**Important:** The official SDK docs (sdk.md) and the serving-user-broker example document different parameter orders. This skill follows the official sdk.md signature shown above.
+Parameter order: **provider, chatID, content**. Do NOT reorder.
 
 ### chatID Retrieval by Service Type
 

@@ -145,8 +145,8 @@ if (!chatID) {
 
 await broker.inference.processResponse(
   providerAddress,
-  JSON.stringify(data),  // Received content
-  chatID                 // Optional chatID for TEE verification
+  chatID,                       // Response identifier for verification
+  JSON.stringify(data.usage)    // Usage data for fee calculation
 );
 ```
 
@@ -206,8 +206,8 @@ const finalChatID = chatID || streamChatID;
 
 await broker.inference.processResponse(
   providerAddress,
-  JSON.stringify(usage || {}),  // Received content
-  finalChatID                   // Optional chatID for TEE verification
+  finalChatID,                        // Response identifier for verification
+  JSON.stringify(usage || {})         // Usage data for fee calculation
 );
 ```
 
@@ -247,8 +247,8 @@ const chatID = response.headers.get("ZG-Res-Key") || response.headers.get("zg-re
 
 const isValid = await broker.inference.processResponse(
   providerAddress,
-  JSON.stringify(data),  // Received content
-  chatID                 // Optional chatID for TEE verification
+  chatID,                       // Response identifier for verification
+  JSON.stringify(data.usage)    // Usage data for fee calculation
 );
 console.log("Response valid:", isValid);
 ```
@@ -284,8 +284,8 @@ const chatID = response.headers.get("ZG-Res-Key") || response.headers.get("zg-re
 
 const isValid = await broker.inference.processResponse(
   providerAddress,
-  JSON.stringify(data),  // Received content
-  chatID                 // Optional chatID for TEE verification
+  chatID,                       // Response identifier for verification
+  JSON.stringify(data.usage)    // Usage data for fee calculation
 );
 console.log("Response valid:", isValid);
 ```
@@ -331,8 +331,8 @@ for (const line of rawBody.split('\n')) {
 // Process with chatID for verification if available
 const isValid = await broker.inference.processResponse(
   providerAddress,
-  JSON.stringify(usage || {}),  // Received content
-  chatID                        // Optional chatID for TEE verification
+  chatID,                             // Response identifier for verification
+  JSON.stringify(usage || {})         // Usage data for fee calculation
 );
 console.log("Audio streaming response valid:", isValid);
 ```

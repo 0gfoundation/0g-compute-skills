@@ -258,8 +258,8 @@ async function transcribeAudio(
   // Process response for fee management
   await broker.inference.processResponse(
     providerAddress,
-    JSON.stringify(data),  // Received content
-    chatID                 // Optional chatID for TEE verification
+    chatID,                       // Response identifier for verification
+    JSON.stringify(data.usage)    // Usage data for fee calculation
   );
 
   return data;
@@ -544,8 +544,8 @@ const chatID = response.headers.get("ZG-Res-Key") ||
 // Process response
 await broker.inference.processResponse(
   providerAddress,
-  JSON.stringify(data),          // Received content
-  chatID                         // Optional chatID for TEE verification
+  chatID,                              // Response identifier for verification
+  JSON.stringify(data.usage)           // Usage data for fee calculation
 );
 ```
 
