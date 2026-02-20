@@ -362,8 +362,8 @@ async function main() {
     console.log("\\n💰 Processing response for fee management...");
     const isValid = await broker.inference.processResponse(
       providerAddress,
-      chatID, // Response identifier for TEE verification
-      JSON.stringify(usageData)
+      chatID,                          // Response identifier for verification
+      JSON.stringify(usageData)        // Usage data for fee calculation
     );
 
     console.log("✅ Response is valid:", isValid);
@@ -535,8 +535,8 @@ Always processes response for fee management:
 ```typescript
 await broker.inference.processResponse(
   providerAddress,
-  chatID,                      // For TEE verification
-  JSON.stringify(usageData)    // For fee calculation
+  chatID,                          // Response identifier for verification
+  JSON.stringify(usageData)        // Usage data for fee calculation
 );
 ```
 

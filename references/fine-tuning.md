@@ -2,7 +2,7 @@
 
 Complete guide for fine-tuning AI models on 0G's distributed GPU network.
 
-**Important:** Fine-tuning is currently available on **testnet only**. Mainnet support will be added in future releases.
+**Important:** Fine-tuning is available on both **mainnet** and **testnet**. Mainnet provider: `0x940b4a101CaBa9be04b16A7363cafa29C1660B0d` (models: Qwen2.5-0.5B-Instruct, Qwen3-32B).
 
 ## Complete Workflow
 
@@ -45,6 +45,8 @@ System-provided models available across all providers:
 | Model Name                   | Type                  | Description                                                                                                                                                |
 | ---------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `distilbert-base-uncased`    | Text Classification   | DistilBERT is a smaller, faster version of BERT. [More info](https://huggingface.co/distilbert/distilbert-base-uncased)                                   |
+| `Qwen2.5-0.5B-Instruct`     | Instruction-tuned LLM | Qwen 2.5 0.5B parameter instruction-tuned model. Available on mainnet. [More info](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct)                   |
+| `Qwen3-32B`                 | Large LLM             | Qwen 3 32B parameter model. Available on mainnet. [More info](https://huggingface.co/Qwen/Qwen3-32B)                                                     |
 
 #### Provider's Models
 
