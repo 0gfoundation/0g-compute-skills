@@ -24,7 +24,7 @@ When unsure about a pattern, reference the detailed guides:
 
 | Network | RPC URL | Inference | Fine-tuning |
 |---------|---------|-----------|-------------|
-| Mainnet | `https://evmrpc.0g.ai` | Yes | No |
+| Mainnet | `https://evmrpc.0g.ai` | Yes | Yes |
 | Testnet | `https://evmrpc-testnet.0g.ai` | Yes | Yes |
 
 Model availability changes frequently. Always use `broker.inference.listService()` or `0g-compute-cli inference list-providers` to check current models. On-chain model names use `org/model-name` format.
@@ -104,7 +104,7 @@ await broker.inference.processResponse(
 );
 ```
 
-Parameter order: **provider, chatID, content**. Do NOT reorder.
+Parameter order: **provider, chatID, usageData**. Do NOT reorder.
 
 ### chatID Retrieval by Service Type
 
@@ -120,7 +120,7 @@ Always try `ZG-Res-Key` response header first. Use fallback only when header is 
 
 ## Fine-tuning
 
-Fine-tuning is available on **testnet only**. It is a 6-step CLI process: list providers, upload dataset, calculate tokens, create task, monitor, download and decrypt.
+Fine-tuning is available on both **mainnet** and **testnet**. It is a 6-step CLI process: list providers, upload dataset, calculate tokens, create task, monitor, download and decrypt.
 
 For the complete workflow, see [references/fine-tuning.md](references/fine-tuning.md).
 
