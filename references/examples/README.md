@@ -8,7 +8,7 @@ Choose the example that matches your use case:
 
 ### 1. Streaming Chat Application
 
-**File**: [examples/streaming-chat.md](examples/streaming-chat.md)
+**File**: [streaming-chat.md](streaming-chat.md)
 
 A complete TypeScript project showcasing **streaming chatbot inference** with real-time output.
 
@@ -32,7 +32,7 @@ A complete TypeScript project showcasing **streaming chatbot inference** with re
 
 ### 2. Text-to-Image Generation
 
-**File**: [examples/text-to-image.md](examples/text-to-image.md)
+**File**: [text-to-image.md](text-to-image.md)
 
 A complete TypeScript project for **generating images from text descriptions** using 0G Compute.
 
@@ -55,7 +55,7 @@ A complete TypeScript project for **generating images from text descriptions** u
 
 ### 3. Speech-to-Text Transcription
 
-**File**: [examples/speech-to-text.md](examples/speech-to-text.md)
+**File**: [speech-to-text.md](speech-to-text.md)
 
 A complete TypeScript project for **transcribing audio files to text** using 0G Compute.
 
@@ -144,7 +144,7 @@ To list available providers for each service type:
 
 - **API Reference**: See [inference.md](../inference.md) for detailed API documentation
 - **Account Management**: See [account-management.md](../account-management.md) for fund management
-- **SDK Documentation**: See [SKILL.md](../SKILL.md) for quick SDK reference
+- **SDK Documentation**: See [SKILL.md](../../SKILL.md) for quick SDK reference
 
 ## Contributing Examples
 
